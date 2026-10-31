@@ -62,17 +62,17 @@ def write_csv(rows: list[dict[str, int]], output_path: Path) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--length", type=int, default=400, help="number of input samples")
-    parser.add_argument("--output", type=Path, default=ROOT / "output/m_sequence_400.csv")
+    parser.add_argument("--length", type=int, default=400, help="要生成的输入数量")
+    parser.add_argument("--output", type=Path, default=ROOT / "output/m_sequence_400.csv", help="结果文件路径")
     args = parser.parse_args()
 
     rows = generate(args.length)
     check_one_period(generate(PERIOD))
     write_csv(rows, args.output)
     bits = "".join(str(row["bit"]) for row in rows[:PERIOD])
-    print(f"First period (0/1): {bits}")
-    print(f"Period: {PERIOD}; first-period mean of +/-1 input: {sum(row['u'] for row in rows[:PERIOD]) / PERIOD:.6f}")
-    print(f"Wrote {len(rows)} input samples to {args.output}")
+    print(f"首个周期的二进制序列：{bits}")
+    print(f"周期：{PERIOD}；首个周期的输入均值：{sum(row['u'] for row in rows[:PERIOD]) / PERIOD:.6f}")
+    print(f"已生成 {len(rows)} 个输入值，保存至：{args.output}")
 
 
 if __name__ == "__main__":

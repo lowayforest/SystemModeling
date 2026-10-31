@@ -43,9 +43,9 @@ def main() -> None:
         for i in range(LENGTH):
             writer.writerow((i + 1, u[i], v[i], z[i], *h[i]))
 
-    print(f"seed={NOISE_SEED}, L={LENGTH}, rank(H)={np.linalg.matrix_rank(h)}")
-    print("a1={:.6f}, a2={:.6f}, b1={:.6f}, b2={:.6f}".format(*theta))
-    print(f"data={OUTPUT}")
+    print(f"随机种子：{NOISE_SEED}；数据长度：{LENGTH}；数据矩阵秩：{np.linalg.matrix_rank(h)}")
+    print("参数估计：a1={:.6f}，a2={:.6f}，b1={:.6f}，b2={:.6f}".format(*theta))
+    print(f"数据文件：{OUTPUT}")
 
 
 if __name__ == "__main__":
