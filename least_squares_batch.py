@@ -14,7 +14,7 @@ from m_sequence import generate
 
 
 LENGTH = 400
-NOISE_SEED = 11514
+NOISE_SEED = 26721988
 OUTPUT = Path(__file__).resolve().parent / "output" / "least_squares_data_400.csv"
 
 
