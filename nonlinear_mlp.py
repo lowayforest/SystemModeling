@@ -41,6 +41,23 @@ def main() -> None:
     x_valid, y_valid = datasets[3]
     x_test, y_test = datasets[4]
 
+    basis = np.column_stack((
+        -x_train[:, 0], -x_train[:, 1], x_train[:, 2], x_train[:, 3],
+        np.tanh(x_train[:, 0] * x_train[:, 2])
+    ))
+    basis_tensor = torch.tensor(basis, dtype=torch.float64)
+    target_tensor = torch.tensor(y_train, dtype=torch.float64)
+    coefficients = nn.Parameter(torch.zeros(5, dtype=torch.float64))
+    coefficient_optimizer = torch.optim.Adam((coefficients,), lr=0.03)
+    for _ in range(2500):
+        coefficient_loss = torch.mean((basis_tensor @ coefficients - target_tensor) ** 2)
+        coefficient_optimizer.zero_grad()
+        coefficient_loss.backward()
+        coefficient_optimizer.step()
+        if coefficient_loss.item() < 1e-12:
+            break
+    estimated_coefficients = coefficients.detach().numpy().copy()
+
     x_mean = x_train.mean(axis=0)
     x_std = x_train.std(axis=0)
     y_mean = y_train.mean()
@@ -104,6 +121,10 @@ def main() -> None:
         writer = csv.writer(stream)
         writer.writerow(("epoch", "train_mse_normalized", "valid_mse_normalized"))
         writer.writerows(zip(range(1, len(train_losses) + 1), train_losses, valid_losses))
+    with (OUTPUT_DIR / "nonlinear_coefficients.csv").open("w", encoding="utf-8", newline="") as stream:
+        writer = csv.writer(stream)
+        writer.writerow(("coefficient", "true", "estimated"))
+        writer.writerows(zip(("a1", "a2", "b1", "b2", "c"), (-1.5, 0.7, 1.0, 0.5, 0.4), estimated_coefficients))
 
     installed_fonts = {font.name for font in font_manager.fontManager.ttflist}
     for name in ("Heiti SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", "SimHei"):
@@ -151,6 +172,7 @@ def main() -> None:
     print(f"seed={SEED}, trajectory_length={LENGTH}, train=2400, validation=800, test=800")
     print(f"epochs={len(train_losses)}, best_epoch={best_epoch}, best_validation_mse={best_loss:.8f}")
     print(f"test_mae={mae:.6f}, test_rmse={rmse:.6f}, test_r2={r2:.6f}")
+    print("coefficients=" + ", ".join(f"{value:.6f}" for value in estimated_coefficients))
     print(f"true_range=[{y_test.min():.4f}, {y_test.max():.4f}]")
     print(f"output={OUTPUT_DIR}")
 
