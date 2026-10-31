@@ -107,15 +107,12 @@ def main() -> None:
         writer.writerows(zip(range(1, 21), rho))
 
     estimates = np.array([row[6:] for row in history])
-    figure, axes = plt.subplots(2, 2, figsize=(9, 5.6), sharex=True)
-    for axis, index, name, truth in zip(axes.flat, range(4), ("a1", "a2", "b1", "b2"), (-1.5, 0.7, 1.0, 0.5)):
-        axis.plot(np.arange(1, LENGTH + 1), estimates[:, index], color="black", linewidth=1.15, label="estimate")
-        axis.axhline(truth, color="0.45", linestyle="--", linewidth=1, label="true value")
-        axis.set_ylabel(name)
-        axis.grid(color="0.88", linewidth=0.5)
-    axes[0, 0].legend(frameon=False, fontsize=8)
-    axes[1, 0].set_xlabel("k")
-    axes[1, 1].set_xlabel("k")
+    figure, axis = plt.subplots(figsize=(8.5, 4.5))
+    for index, name, color in zip(range(4), ("a1", "a2", "b1", "b2"), ("#1f77b4", "#d62728", "#2ca02c", "#ff7f0e")):
+        axis.plot(np.arange(1, LENGTH + 1), estimates[:, index], color=color, linewidth=1.4, label=name)
+    axis.set(xlabel="k", ylabel="parameter estimate", xlim=(10, LENGTH), ylim=(-1.8, 1.5))
+    axis.grid(color="0.88", linewidth=0.5)
+    axis.legend(ncol=4, frameon=False)
     figure.tight_layout()
     figure.savefig(PARAMETER_FIGURE, dpi=220)
     plt.close(figure)
