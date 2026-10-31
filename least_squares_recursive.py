@@ -5,6 +5,7 @@ from pathlib import Path
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import font_manager
 
 
 LENGTH = 480
@@ -31,6 +32,13 @@ def inverse_m_sequence(length: int) -> np.ndarray:
 
 
 def main() -> None:
+    installed_fonts = {font.name for font in font_manager.fontManager.ttflist}
+    for name in ("Heiti SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", "SimHei"):
+        if name in installed_fonts:
+            plt.rcParams["font.family"] = name
+            break
+    plt.rcParams["axes.unicode_minus"] = False
+
     u = inverse_m_sequence(LENGTH)
     v = np.random.default_rng(NOISE_SEED).normal(0.0, 1.0, LENGTH)
     y = np.zeros(LENGTH)
@@ -108,9 +116,9 @@ def main() -> None:
 
     estimates = np.array([row[6:] for row in history])
     figure, axis = plt.subplots(figsize=(8.5, 4.5))
-    for index, name, color in zip(range(4), ("a1", "a2", "b1", "b2"), ("#1f77b4", "#d62728", "#2ca02c", "#ff7f0e")):
+    for index, name, color in zip(range(4), ("参数 $a_1$", "参数 $a_2$", "参数 $b_1$", "参数 $b_2$"), ("#1f77b4", "#d62728", "#2ca02c", "#ff7f0e")):
         axis.plot(np.arange(1, LENGTH + 1), estimates[:, index], color=color, linewidth=1.4, label=name)
-    axis.set(xlabel="k", ylabel="parameter estimate", xlim=(10, LENGTH), ylim=(-1.8, 1.5))
+    axis.set(xlabel="采样步数 k", ylabel="参数估计值", xlim=(10, LENGTH), ylim=(-1.8, 1.5))
     axis.grid(color="0.88", linewidth=0.5)
     axis.legend(ncol=4, frameon=False)
     figure.tight_layout()
@@ -118,22 +126,29 @@ def main() -> None:
     plt.close(figure)
 
     limit = 1.98 / np.sqrt(LENGTH)
-    figure, axis = plt.subplots(figsize=(8.5, 3.4))
-    axis.axhline(0, color="black", linewidth=0.8)
-    axis.vlines(np.arange(1, 21), 0, rho, color="black", linewidth=1.4)
-    axis.plot(np.arange(1, 21), rho, "ko", markersize=3)
-    axis.axhline(limit, color="0.45", linestyle="--", linewidth=1)
-    axis.axhline(-limit, color="0.45", linestyle="--", linewidth=1)
-    axis.set(xlabel="lag", ylabel="residual autocorrelation", xticks=np.arange(1, 21, 2), xlim=(0, 21))
-    axis.grid(axis="y", color="0.88", linewidth=0.5)
-    figure.tight_layout()
+    figure, axis = plt.subplots(figsize=(7.1, 4.2))
+    axis.spines["top"].set_visible(False)
+    axis.spines["right"].set_visible(False)
+    axis.spines["bottom"].set_position(("data", 0))
+    axis.spines["left"].set_position(("data", 0))
+    axis.vlines(np.arange(1, 21), 0, rho, color="black", linewidth=1.25)
+    axis.plot(np.arange(1, 21), rho, "ko", markersize=2.4)
+    axis.hlines((limit, -limit), 0, 20.3, color="black", linestyle=(0, (5, 4)), linewidth=1)
+    axis.set(xlim=(-0.6, 22.3), ylim=(-0.14, 0.14), xticks=(0, 5, 10, 15, 20), yticks=(-0.1, 0, 0.1))
+    axis.text(20.45, limit, r"$+1.98/\sqrt{L}$", va="bottom", fontsize=9)
+    axis.text(20.45, -limit, r"$-1.98/\sqrt{L}$", va="top", fontsize=9)
+    axis.set_xlabel(r"滞后阶数 $\ell$")
+    axis.xaxis.set_label_coords(0.52, -0.08)
+    axis.set_ylabel("残差自相关系数")
+    axis.yaxis.set_label_coords(-0.08, 0.5)
+    figure.subplots_adjust(left=0.13, right=0.94, bottom=0.15, top=0.94)
     figure.savefig(AUTOCORR_FIGURE, dpi=220)
     plt.close(figure)
 
     figure, axis = plt.subplots(figsize=(8.5, 3.4))
-    axis.plot(range(26), step_true, "k-", marker="o", markersize=3, linewidth=1.2, label="true process")
-    axis.plot(range(26), step_estimated, color="0.45", linestyle="--", marker="x", markersize=4, linewidth=1.2, label="estimated model")
-    axis.set(xlabel="k", ylabel="step response", xlim=(0, 25), xticks=np.arange(0, 26, 2))
+    axis.plot(range(26), step_true, "k-", marker="o", markersize=3, linewidth=1.2, label="真实对象")
+    axis.plot(range(26), step_estimated, color="0.45", linestyle="--", marker="x", markersize=4, linewidth=1.2, label="辨识模型")
+    axis.set(xlabel="采样步数 k", ylabel="阶跃响应", xlim=(0, 25), xticks=np.arange(0, 26, 2))
     axis.grid(color="0.88", linewidth=0.5)
     axis.legend(frameon=False)
     figure.tight_layout()
