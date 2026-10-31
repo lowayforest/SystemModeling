@@ -13,7 +13,7 @@ NOISE_SEED = 26721988
 OUTPUT = Path(__file__).resolve().parent / "output" / "least_squares_data_400.csv"
 
 
-def main() -> None:
+def generate_data() -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     u = np.array([row["u"] for row in generate(LENGTH)], dtype=float)
     v = np.random.default_rng(NOISE_SEED).normal(0.0, 1.0, LENGTH)
     z = np.zeros(LENGTH)
@@ -27,6 +27,11 @@ def main() -> None:
         z[i] = 1.5 * z1 - 0.7 * z2 + u1 + 0.5 * u2 + v[i]
         h[i] = (-z1, -z2, u1, u2)
 
+    return u, v, z, h
+
+
+def main() -> None:
+    u, v, z, h = generate_data()
     if np.linalg.matrix_rank(h) != 4:
         raise ValueError("The data matrix does not have full column rank")
     theta = np.linalg.solve(h.T @ h, h.T @ z)
