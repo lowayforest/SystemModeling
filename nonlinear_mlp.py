@@ -49,14 +49,17 @@ def main() -> None:
     target_tensor = torch.tensor(y_train, dtype=torch.float64)
     coefficients = nn.Parameter(torch.zeros(5, dtype=torch.float64))
     coefficient_optimizer = torch.optim.Adam((coefficients,), lr=0.03)
+    coefficient_history = []
     for _ in range(2500):
         coefficient_loss = torch.mean((basis_tensor @ coefficients - target_tensor) ** 2)
         coefficient_optimizer.zero_grad()
         coefficient_loss.backward()
         coefficient_optimizer.step()
+        coefficient_history.append(coefficients.detach().numpy().copy())
         if coefficient_loss.item() < 1e-12:
             break
     estimated_coefficients = coefficients.detach().numpy().copy()
+    coefficient_history = np.array(coefficient_history)
 
     x_mean = x_train.mean(axis=0)
     x_std = x_train.std(axis=0)
@@ -125,6 +128,10 @@ def main() -> None:
         writer = csv.writer(stream)
         writer.writerow(("coefficient", "true", "estimated"))
         writer.writerows(zip(("a1", "a2", "b1", "b2", "c"), (-1.5, 0.7, 1.0, 0.5, 0.4), estimated_coefficients))
+    with (OUTPUT_DIR / "nonlinear_coefficient_history.csv").open("w", encoding="utf-8", newline="") as stream:
+        writer = csv.writer(stream)
+        writer.writerow(("iteration", "a1", "a2", "b1", "b2", "c"))
+        writer.writerows((i, *row) for i, row in enumerate(coefficient_history, 1))
 
     installed_fonts = {font.name for font in font_manager.fontManager.ttflist}
     for name in ("Heiti SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", "SimHei"):
@@ -132,6 +139,21 @@ def main() -> None:
             plt.rcParams["font.family"] = name
             break
     plt.rcParams["axes.unicode_minus"] = False
+
+    figure, axis = plt.subplots(figsize=(8.5, 4.5))
+    for i, name, color, truth in zip(
+        range(5), (r"$a_1$", r"$a_2$", r"$b_1$", r"$b_2$", "$c$"),
+        ("#1f77b4", "#d62728", "#2ca02c", "#ff7f0e", "#9467bd"),
+        (-1.5, 0.7, 1.0, 0.5, 0.4)
+    ):
+        axis.plot(range(1, len(coefficient_history) + 1), coefficient_history[:, i], color=color, linewidth=1.2, label=name)
+        axis.axhline(truth, color=color, linestyle="--", linewidth=0.8, alpha=0.65)
+    axis.set(xlabel="优化轮数", ylabel="系数估计值", ylim=(-1.8, 1.3))
+    axis.legend(ncol=5, frameon=False)
+    axis.grid(color="0.88", linewidth=0.5)
+    figure.tight_layout()
+    figure.savefig(OUTPUT_DIR / "nonlinear_coefficients.png", dpi=220)
+    plt.close(figure)
 
     figure, axes = plt.subplots(2, 1, figsize=(8.5, 5), sharex=True, gridspec_kw={"height_ratios": (2, 1)})
     axes[0].plot(range(1, 121), y_test[:120], color="black", linewidth=1.2, label="真实值")
@@ -173,6 +195,7 @@ def main() -> None:
     print(f"epochs={len(train_losses)}, best_epoch={best_epoch}, best_validation_mse={best_loss:.8f}")
     print(f"test_mae={mae:.6f}, test_rmse={rmse:.6f}, test_r2={r2:.6f}")
     print("coefficients=" + ", ".join(f"{value:.6f}" for value in estimated_coefficients))
+    print(f"coefficient_iterations={len(coefficient_history)}")
     print(f"true_range=[{y_test.min():.4f}, {y_test.max():.4f}]")
     print(f"output={OUTPUT_DIR}")
 
