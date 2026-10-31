@@ -20,8 +20,9 @@ def inverse_m_sequence(length: int) -> np.ndarray:
         state = state[1:] + [state[0] ^ state[1]]
     if state != [1, 0, 1, 0]:
         raise ValueError("M sequence did not return to its initial state")
-    base = 2 * np.array(bits, dtype=float) - 1
-    return np.resize(np.concatenate((base, -base)), length)
+    base = np.resize(np.array(bits, dtype=int), length)
+    square = np.arange(length) % 2
+    return 2 * np.bitwise_xor(base, square) - 1
 
 
 def main() -> None:
