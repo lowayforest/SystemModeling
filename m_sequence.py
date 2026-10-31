@@ -1,10 +1,3 @@
-"""Generate the 4-stage M-sequence used as input in textbook Example 5.3.
-
-The register and feedback follow textbook Example 2.6 (printed page 55):
-initial state C1..C4 = 1010, feedback = C3 XOR C4, output = C4.
-No random seed is needed for this deterministic sequence.
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -68,7 +61,7 @@ def write_csv(rows: list[dict[str, int]], output_path: Path) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser()
     parser.add_argument("--length", type=int, default=400, help="number of input samples")
     parser.add_argument("--output", type=Path, default=ROOT / "output/m_sequence_400.csv")
     args = parser.parse_args()

@@ -1,8 +1,3 @@
-"""Reproduce textbook Example 5.3 with one batch least-squares estimate.
-
-Run from this directory with: uv run --with numpy python least_squares_batch.py
-"""
-
 from __future__ import annotations
 
 import csv
@@ -19,7 +14,6 @@ OUTPUT = Path(__file__).resolve().parent / "output" / "least_squares_data_400.cs
 
 
 def main() -> None:
-    # u[0] means the textbook's u(1). Values before k=1 are taken as zero.
     u = np.array([row["u"] for row in generate(LENGTH)], dtype=float)
     v = np.random.default_rng(NOISE_SEED).normal(0.0, 1.0, LENGTH)
     z = np.zeros(LENGTH)
