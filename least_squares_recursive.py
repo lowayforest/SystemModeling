@@ -115,12 +115,28 @@ def main() -> None:
         writer.writerows(zip(range(1, 21), rho))
 
     estimates = np.array([row[6:] for row in history])
-    figure, axis = plt.subplots(figsize=(8.5, 4.5))
-    for index, name, color in zip(range(4), ("参数 $a_1$", "参数 $a_2$", "参数 $b_1$", "参数 $b_2$"), ("#1f77b4", "#d62728", "#2ca02c", "#ff7f0e")):
-        axis.plot(np.arange(1, LENGTH + 1), estimates[:, index], color=color, linewidth=1.4, label=name)
-    axis.set(xlabel="采样步数 k", ylabel="参数估计值", xlim=(10, LENGTH), ylim=(-1.8, 1.5))
-    axis.grid(color="0.88", linewidth=0.5)
-    axis.legend(ncol=4, frameon=False)
+    figure, axis = plt.subplots(figsize=(9, 5.2))
+    sample_steps = np.array((100, 200, 300, 400, 480))
+    for index, name, color, truth, offset in zip(
+        range(4), (r"$\hat a_1$", r"$\hat a_2$", r"$\hat b_1$", r"$\hat b_2$"),
+        ("#1f77b4", "#d62728", "#2ca02c", "#ff7f0e"), (-1.5, 0.7, 1.0, 0.5),
+        (10, -13, 10, -13)
+    ):
+        axis.plot(np.arange(1, LENGTH + 1), estimates[:, index], color=color, linewidth=1.35)
+        axis.hlines(truth, 0, 520, color=color, linestyle="--", linewidth=1, alpha=0.8)
+        axis.scatter(sample_steps, estimates[sample_steps - 1, index], color=color, s=19, zorder=3)
+        for step in sample_steps:
+            axis.annotate(f"({estimates[step - 1, index]:.2f})", (step, estimates[step - 1, index]),
+                          xytext=(0, offset), textcoords="offset points", ha="center", fontsize=7.5, color=color)
+        axis.text(527, truth, name, color=color, va="center", fontsize=11)
+    axis.spines["top"].set_visible(False)
+    axis.spines["right"].set_visible(False)
+    axis.spines["bottom"].set_position(("data", 0))
+    axis.spines["left"].set_position(("data", 0))
+    axis.set(xlim=(0, 560), ylim=(-1.8, 1.5), xticks=(0, 100, 200, 300, 400, 500),
+             yticks=(-1.5, -1.0, -0.5, 0, 0.5, 0.7, 1.0))
+    axis.text(0.01, 1.02, r"$\hat\theta(k)$", transform=axis.transAxes, fontsize=11)
+    axis.text(0.98, 0.51, "$k$", transform=axis.transAxes, fontsize=11)
     figure.tight_layout()
     figure.savefig(PARAMETER_FIGURE, dpi=220)
     plt.close(figure)
