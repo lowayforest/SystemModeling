@@ -40,6 +40,7 @@ def main() -> None:
     y_train = np.concatenate([item[1] for item in datasets[:3]])
     x_valid, y_valid = datasets[3]
     x_test, y_test = datasets[4]
+    x_test_raw = x_test.copy()
 
     basis = np.column_stack((
         -x_train[:, 0], -x_train[:, 1], x_train[:, 2], x_train[:, 3],
@@ -60,6 +61,17 @@ def main() -> None:
             break
     estimated_coefficients = coefficients.detach().numpy().copy()
     coefficient_history = np.array(coefficient_history)
+    y_coefficient = np.zeros(LENGTH)
+    a1, a2, b1, b2, c = estimated_coefficients
+    for i in range(LENGTH):
+        y1 = y_coefficient[i - 1] if i >= 1 else 0.0
+        y2 = y_coefficient[i - 2] if i >= 2 else 0.0
+        u1, u2 = x_test_raw[i, 2:]
+        y_coefficient[i] = -a1 * y1 - a2 * y2 + b1 * u1 + b2 * u2 + c * np.tanh(y1 * u1)
+    coefficient_error = y_test - y_coefficient
+    coefficient_mae = np.mean(np.abs(coefficient_error))
+    coefficient_rmse = np.sqrt(np.mean(coefficient_error**2))
+    coefficient_max_error = np.max(np.abs(coefficient_error))
 
     x_mean = x_train.mean(axis=0)
     x_std = x_train.std(axis=0)
@@ -132,6 +144,10 @@ def main() -> None:
         writer = csv.writer(stream)
         writer.writerow(("iteration", "a1", "a2", "b1", "b2", "c"))
         writer.writerows((i, *row) for i, row in enumerate(coefficient_history, 1))
+    with (OUTPUT_DIR / "nonlinear_coefficient_test.csv").open("w", encoding="utf-8", newline="") as stream:
+        writer = csv.writer(stream)
+        writer.writerow(("k", "true", "estimated_model", "error"))
+        writer.writerows(zip(range(1, LENGTH + 1), y_test, y_coefficient, coefficient_error))
 
     installed_fonts = {font.name for font in font_manager.fontManager.ttflist}
     for name in ("Heiti SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Microsoft YaHei", "SimHei"):
@@ -153,6 +169,20 @@ def main() -> None:
     axis.grid(color="0.88", linewidth=0.5)
     figure.tight_layout()
     figure.savefig(OUTPUT_DIR / "nonlinear_coefficients.png", dpi=220)
+    plt.close(figure)
+
+    figure, axes = plt.subplots(2, 1, figsize=(8.5, 5), sharex=True, gridspec_kw={"height_ratios": (2, 1)})
+    axes[0].plot(range(1, 121), y_test[:120], color="black", linewidth=1.2, label="真实输出")
+    axes[0].plot(range(1, 121), y_coefficient[:120], color="#d62728", linestyle="--", linewidth=1.2, label="系数模型输出")
+    axes[0].set_ylabel("系统输出")
+    axes[0].legend(frameon=False)
+    axes[1].plot(range(1, 121), coefficient_error[:120], color="#1f77b4", linewidth=1)
+    axes[1].axhline(0, color="black", linewidth=0.7)
+    axes[1].set(xlabel="测试序列步数 k", ylabel="真实值－模型值")
+    for axis in axes:
+        axis.grid(color="0.88", linewidth=0.5)
+    figure.tight_layout()
+    figure.savefig(OUTPUT_DIR / "nonlinear_coefficient_prediction.png", dpi=220)
     plt.close(figure)
 
     figure, axes = plt.subplots(2, 1, figsize=(8.5, 5), sharex=True, gridspec_kw={"height_ratios": (2, 1)})
@@ -196,6 +226,7 @@ def main() -> None:
     print(f"test_mae={mae:.6f}, test_rmse={rmse:.6f}, test_r2={r2:.6f}")
     print("coefficients=" + ", ".join(f"{value:.6f}" for value in estimated_coefficients))
     print(f"coefficient_iterations={len(coefficient_history)}")
+    print(f"coefficient_test_mae={coefficient_mae:.8f}, coefficient_test_rmse={coefficient_rmse:.8f}, coefficient_test_max_error={coefficient_max_error:.8f}")
     print(f"true_range=[{y_test.min():.4f}, {y_test.max():.4f}]")
     print(f"output={OUTPUT_DIR}")
 

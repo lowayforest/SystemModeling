@@ -61,4 +61,4 @@ python -m pip install torch
 python nonlinear_mlp.py
 ```
 
-程序在原对象的输入输出关系中加入 `0.4*tanh(前一步输出×前一步输入)`，不叠加噪声，使用随机种子 `26721988` 生成 5 条各 800 步的独立序列。前 3 条训练、第 4 条验证、第 5 条测试。主要结果是根据已知的非线性结构，从训练数据中用反向传播和 Adam 估计 `a1、a2、b1、b2、c` 五个显式系数；最终值写入 `output/nonlinear_coefficients.csv`，每次更新的值写入 `output/nonlinear_coefficient_history.csv`，并绘成 `output/nonlinear_coefficients.png`。另用两层各 32 个神经元的 MLP 检验下一步输出预测，测试集得到 MAE `0.014111`、RMSE `0.022029`、R² `0.999972`。`output/` 下还会生成测试数据、训练误差数据，以及真实值与预测值、散点比较、训练误差三张 PNG；这些运行结果已被 Git 忽略，需要时重新运行即可。
+程序在原对象的输入输出关系中加入 `0.4*tanh(前一步输出×前一步输入)`，不叠加噪声，使用随机种子 `26721988` 生成 5 条各 800 步的独立序列。前 3 条训练、第 4 条验证、第 5 条测试。主要结果是根据已知的非线性结构，从训练数据中用反向传播和 Adam 估计 `a1、a2、b1、b2、c` 五个显式系数；最终值写入 `output/nonlinear_coefficients.csv`，每次更新的值写入 `output/nonlinear_coefficient_history.csv`，并绘成 `output/nonlinear_coefficients.png`。把估计系数代回公式，在独立测试输入上连续计算 800 步，得到平均绝对误差 `0.00000405`、均方根误差 `0.00000504`；数据和图写入 `output/nonlinear_coefficient_test.csv`、`output/nonlinear_coefficient_prediction.png`。另用两层各 32 个神经元的 MLP 检验下一步输出预测，测试集得到 MAE `0.014111`、RMSE `0.022029`、R² `0.999972`。`output/` 下还会生成 MLP 测试数据、训练误差数据和图；这些运行结果已被 Git 忽略，需要时重新运行即可。
