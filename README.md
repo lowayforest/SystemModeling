@@ -7,11 +7,11 @@
 首次使用时运行一次：
 
 ```bash
-conda create -n systemmodeling python=3.11 numpy
+conda create -n systemmodeling python=3.11 numpy matplotlib
 conda activate systemmodeling
 ```
 
-如果环境已经创建，跳过第一行。以后打开新终端，只需运行 `conda activate systemmodeling`。如果终端提示需要初始化 Conda，先运行 `conda init zsh`，关闭并重新打开终端，再激活环境。激活成功后，终端提示符前会出现 `(systemmodeling)`。
+如果环境已经创建，跳过第一行；旧环境若只有 NumPy，再运行一次 `conda install matplotlib`。以后打开新终端，只需运行 `conda activate systemmodeling`。如果终端提示需要初始化 Conda，先运行 `conda init zsh`，关闭并重新打开终端，再激活环境。激活成功后，终端提示符前会出现 `(systemmodeling)`。
 
 ## 第一题：M 序列生成
 
@@ -43,6 +43,6 @@ python least_squares_batch.py
 python least_squares_recursive.py
 ```
 
-程序按教材第 149--151 页例 5.5 单独生成 480 组数据，并按第 147 页式 (5.8.17) 每收到一组数据就更新一次四个参数。初始值取 `P(0)=10^6 I`、四个参数均为 `0.001`，权重取 1；噪声随机种子为 `26721988`。程序打印第 10、50、100、200、300、480 组后的估计值，并将全部 480 步写入 `output/least_squares_recursive_480.csv`。第 480 步的结果约为 `(-1.485084, 0.686830, 1.059143, 0.516997)`。程序还按例题后半部分计算残差均值、自相关检验和真实对象与估计模型的阶跃响应，后者写入 `output/least_squares_recursive_step_26.csv`。
+程序按教材第 149--151 页例 5.5 单独生成 480 组数据，并按第 147 页式 (5.8.17) 每收到一组数据就更新一次四个参数。初始值取 `P(0)=10^6 I`、四个参数均为 `0.001`，权重取 1；噪声随机种子为 `26721988`。程序打印第 10、50、100、200、300、480 组后的估计值，并将全部 480 步写入 `output/least_squares_recursive_480.csv`。第 480 步的结果约为 `(-1.485084, 0.686830, 1.059143, 0.516997)`。程序还计算残差均值、自相关检验和真实对象与估计模型的阶跃响应。结果写入 `output/least_squares_recursive_autocorr_20.csv`、`output/least_squares_recursive_step_26.csv`，并生成参数变化、残差自相关和阶跃响应三张 PNG 图。运行时生成的 CSV 和 PNG 均不提交到仓库，需要时重新运行程序即可。
 
 教材第 67 页式 (2.6.53) 把逆 M 序列定义为 M 序列与周期 2 方波的逐位异或，同页表 2.14 标明 4 阶逆 M 序列周期为 30 bit。第 149 页例 5.5 同时写“4 阶”、特征多项式 `1⊕s⊕s^4` 和“周期 62 bit”，这三个条件不一致。程序保留前两个条件，按初始状态 `1010` 生成周期 30 的逆 M 序列，并用 480 组数据的均方根之比把噪信比设为 73%。书中没有提供随机种子和输入初始状态，因此本次结果不等于教材表 5.3。

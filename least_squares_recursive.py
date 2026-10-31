@@ -4,12 +4,17 @@ import csv
 from pathlib import Path
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 LENGTH = 480
 NOISE_SEED = 26721988
 OUTPUT = Path(__file__).resolve().parent / "output" / "least_squares_recursive_480.csv"
 STEP_OUTPUT = Path(__file__).resolve().parent / "output" / "least_squares_recursive_step_26.csv"
+AUTOCORR_OUTPUT = Path(__file__).resolve().parent / "output" / "least_squares_recursive_autocorr_20.csv"
+PARAMETER_FIGURE = Path(__file__).resolve().parent / "output" / "least_squares_recursive_parameters.png"
+AUTOCORR_FIGURE = Path(__file__).resolve().parent / "output" / "least_squares_recursive_autocorr.png"
+STEP_FIGURE = Path(__file__).resolve().parent / "output" / "least_squares_recursive_step.png"
 
 
 def inverse_m_sequence(length: int) -> np.ndarray:
@@ -96,6 +101,47 @@ def main() -> None:
         writer = csv.writer(stream)
         writer.writerow(("k", "true", "estimated"))
         writer.writerows(zip(range(26), step_true, step_estimated))
+    with AUTOCORR_OUTPUT.open("w", encoding="utf-8", newline="") as stream:
+        writer = csv.writer(stream)
+        writer.writerow(("lag", "rho"))
+        writer.writerows(zip(range(1, 21), rho))
+
+    estimates = np.array([row[6:] for row in history])
+    figure, axes = plt.subplots(2, 2, figsize=(9, 5.6), sharex=True)
+    for axis, index, name, truth in zip(axes.flat, range(4), ("a1", "a2", "b1", "b2"), (-1.5, 0.7, 1.0, 0.5)):
+        axis.plot(np.arange(1, LENGTH + 1), estimates[:, index], color="black", linewidth=1.15, label="estimate")
+        axis.axhline(truth, color="0.45", linestyle="--", linewidth=1, label="true value")
+        axis.set_ylabel(name)
+        axis.grid(color="0.88", linewidth=0.5)
+    axes[0, 0].legend(frameon=False, fontsize=8)
+    axes[1, 0].set_xlabel("k")
+    axes[1, 1].set_xlabel("k")
+    figure.tight_layout()
+    figure.savefig(PARAMETER_FIGURE, dpi=220)
+    plt.close(figure)
+
+    limit = 1.98 / np.sqrt(LENGTH)
+    figure, axis = plt.subplots(figsize=(8.5, 3.4))
+    axis.axhline(0, color="black", linewidth=0.8)
+    axis.vlines(np.arange(1, 21), 0, rho, color="black", linewidth=1.4)
+    axis.plot(np.arange(1, 21), rho, "ko", markersize=3)
+    axis.axhline(limit, color="0.45", linestyle="--", linewidth=1)
+    axis.axhline(-limit, color="0.45", linestyle="--", linewidth=1)
+    axis.set(xlabel="lag", ylabel="residual autocorrelation", xticks=np.arange(1, 21, 2), xlim=(0, 21))
+    axis.grid(axis="y", color="0.88", linewidth=0.5)
+    figure.tight_layout()
+    figure.savefig(AUTOCORR_FIGURE, dpi=220)
+    plt.close(figure)
+
+    figure, axis = plt.subplots(figsize=(8.5, 3.4))
+    axis.plot(range(26), step_true, "k-", marker="o", markersize=3, linewidth=1.2, label="true process")
+    axis.plot(range(26), step_estimated, color="0.45", linestyle="--", marker="x", markersize=4, linewidth=1.2, label="estimated model")
+    axis.set(xlabel="k", ylabel="step response", xlim=(0, 25), xticks=np.arange(0, 26, 2))
+    axis.grid(color="0.88", linewidth=0.5)
+    axis.legend(frameon=False)
+    figure.tight_layout()
+    figure.savefig(STEP_FIGURE, dpi=220)
+    plt.close(figure)
 
     print(f"L={LENGTH}, seed={NOISE_SEED}, period=30, lambda={lam:.6f}, noise_signal_ratio=0.73")
     for k in (10, 50, 100, 200, 300, 480):
@@ -108,6 +154,8 @@ def main() -> None:
         print("step={:2d}: true={:.6f}, estimated={:.6f}".format(k, step_true[k], step_estimated[k]))
     print(f"data={OUTPUT}")
     print(f"step_data={STEP_OUTPUT}")
+    print(f"autocorr_data={AUTOCORR_OUTPUT}")
+    print(f"figures={PARAMETER_FIGURE}, {AUTOCORR_FIGURE}, {STEP_FIGURE}")
 
 
 if __name__ == "__main__":
